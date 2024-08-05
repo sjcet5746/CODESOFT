@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Calculator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="bootstrap-5.0.2-dist/css/bootstrap.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .calc-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+            border-radius: 50%;
+            margin: 5px;
+        }
+        .calc-display {
+            background-color: #343a40;
+            color: white;
+            height: 120px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+        .inputString, .expressionString, .valueString {
+            margin: 5px 0;
+            height: 30px;
+            display: block;
+            font-size: 24px;
+        }
+        .history-card {
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .history-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 16px;
+        }
+        .delete-history {
+            margin-top: 20px;
+        }
+        .history-card h5 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+                <div class="card p-3">
+                    <div class="calc-display">
+                        <div id="inputString" class="inputString"></div>
+                        <div id="expressionString" class="expressionString"></div>
+                        <div id="valueString" class="valueString"></div>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-center">
+                        <!-- Button grid -->
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="NumLock"><small>Num Lock</small></button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="Delete">CE</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="Delete">DEL</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="/">/</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="7">7</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="8">8</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="9">9</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="*">*</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="4">4</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="5">5</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="6">6</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="-">-</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="1">1</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="2">2</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="3">3</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="+">+</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="0" style="width: 130px;">0</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key=".">.</button>
+                        <button class="btn btn-light calc-btn" type="button" data-event_key="=">=</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-4">
+                <div class="card p-3 history-card">
+                    <h5>History</h5>
+                    <div id="history"></div>
+                    <button class="btn btn-danger w-100 delete-history" onclick="deleteHistory()">Delete History</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="bs/jquery-3.7.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.8/umd/popper.min.js" integrity="sha512-TPh2Oxlg1zp+kz3nFA0C5vVC6leG/6mm1z9+mA81MI5eaUVqasPLO8Cuk4gMF4gUfP5etR73rgU/8PNMsSesoQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="bootstrap-5.0.2-dist/js/bootstrap.js"></script>
+    <script>
+        let history = [];
+
+        $(document).on('keypress', function(e) {
+            const key = e.key;
+            $('button[data-event_key="' + key + '"]').addClass('active');
+            if ((e.keyCode >= 48 && e.keyCode <= 56) || (e.keyCode >= 96 && e.keyCode <= 105)) {
+                appendNumber(key);
+            } else {
+                if (key == '+' || key == '-' || key == '/' || key == '*') {
+                    generateExpression(key);
+                } else if (key == '=') {
+                    evaluateExpression();
+                } else if (key == 'Delete') {
+                    clearCalc();
+                }
+            }
+            console.log(e.key);
+        });
+
+        $(document).on('keyup', function(e) {
+            const key = e.key;
+            $('button[data-event_key="' + key + '"]').removeClass('active');
+            console.log(e.key);
+        });
+
+        $('.calc-btn').on('click', function(e) {
+            const key = $(this).data('event_key');
+            if (!isNaN(key) || key == '.') {
+                appendNumber(key);
+            } else if (key == '+' || key == '-' || key == '*' || key == '/') {
+                generateExpression(key);
+            } else if (key == '=') {
+                evaluateExpression();
+            } else if (key == 'Delete') {
+                clearCalc();
+            }
+            console.log(key);
+        });
+
+        function appendNumber(number) {
+            let existingNumber = $('#inputString').html();
+            if (existingNumber == '0') {
+                existingNumber = '';
+            }
+            $('#inputString').html(existingNumber + number);
+        }
+
+        function generateExpression(operator) {
+            let existingNumber = $('#inputString').html();
+            let currentExpression = $('#expressionString').html();
+            if (existingNumber) {
+                currentExpression += existingNumber + operator;
+                $('#expressionString').html(currentExpression);
+                $('#inputString').html('');
+            }
+        }
+
+        function evaluateExpression() {
+            let expression = $('#expressionString').html() + $('#inputString').html();
+            if (expression) {
+                const result = eval(expression);
+                $('#inputString').html(result);
+                $('#expressionString').html('');
+                $('#valueString').html(result);
+
+                // Add to history
+                addToHistory(expression, result);
+            }
+        }
+
+        function clearCalc() {
+            $('#inputString').html('');
+            $('#expressionString').html('');
+            $('#valueString').html('');
+        }
+
+        function addToHistory(expression, result) {
+            const historyItem = `${expression} = ${result}`;
+            history.unshift(historyItem); // Add to the beginning
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyDiv = $('#history');
+            historyDiv.html('');
+            history.forEach(item => {
+                historyDiv.append(`<div class="history-item">${item}</div>`);
+            });
+        }
+
+        function deleteHistory() {
+            history = [];
+            updateHistoryDisplay();
+        }
+    </script>
+</body>
+</html>
